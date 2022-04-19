@@ -9,7 +9,8 @@ const modelUid = 'api::game.game'
 
 module.exports = createCoreController(modelUid, ({ strapi }) =>  ({
   populate: (ctx) => {
-    console.log(ctx, strapi, 'teste nelson')
-    ctx.send({ ok: true })
+    console.log('starting populating')
+    console.log(ctx.query);
+    ctx.send('Finished populating')
   }
 }));
