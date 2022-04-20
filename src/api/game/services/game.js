@@ -25,7 +25,11 @@ module.exports = createCoreService('api::game.game', ({ strapi }) => ({
     console.log(products[1])
 
     await strapi.service('api::publisher.publisher').create({
-      name: products[1].publishers[0], slug: slugify(products[1].publishers[0])
+      data: {
+        published_at: new Date(),
+        name: products[1].publishers[0],
+        slug: slugify(products[1].publishers[0].toLowerCase())
+      }
     })
   }
 }));
