@@ -8,9 +8,11 @@ const { createCoreController } = require('@strapi/strapi').factories;
 const modelUid = 'api::game.game'
 
 module.exports = createCoreController(modelUid, ({ strapi }) =>  ({
-  populate: (ctx) => {
+  populate: async (ctx) => {
     console.log('starting populating')
-    console.log(ctx.query);
+
+    await strapi.service(modelUid).populate()
+
     ctx.send('Finished populating')
   }
 }));
