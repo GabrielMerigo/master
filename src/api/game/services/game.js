@@ -7,12 +7,14 @@ const slugify = require('slugify');
 async function getGameInfo(slug){
   const jsdom = require('jsdom');
   const { JSDOM } = jsdom;
-  const body = await axios.get(`https://(www.gog.com/en/game/${slug.replaceAll('-', '_')}`);
+  const slugFormatted = slug.replaceAll('-', '_')
+
+  const body = await axios.get(`https://www.gog.com/en/game/${slugFormatted}`);
   const dom = new JSDOM(body.data)
   const description = dom.window.document.querySelector('.description');
 
   return {
-    rating: 'FREE',
+    rating: 'Free',
     short_description: description.textContent.slice(0, 160),
     description: description.innerHTML
   }
@@ -69,11 +71,41 @@ async function createManyToManyData(products) {
   ]);
 }
 
+async function createGames(products) {
+  await Promise.all(
+    products.map(async (product) => {
+      const item = await getByName(product.title, "game");
+
+      if (!item) {
+        console.info(`Creating: ${product.title}...`);
+
+        const game = await strapi.service('api::game.game').create({
+          data: {
+            name: product.title,
+            slug: product.slug,
+            price: product.price.finalMoney.amount,
+            release_date: product.releaseDate.replaceAll('.', '-'),
+            categories: await Promise.all(product.genres.map(({name}) => getByName(name, "category"))),
+            platforms: await Promise.all(
+              product.operatingSystems.map((name) => getByName(name, "platform"))
+            ),
+            developers: await getByName(product.developers[0], "developer"),
+            publisher: await getByName(product.publishers[0], "publisher"),
+            ...(await getGameInfo(product.slug))
+          }
+        });
+        console.info(`Created: ${product.title}`);
+        return game;
+      }
+    })
+  );
+}
+
 module.exports = createCoreService('api::game.game', ({ strapi }) => ({
   populate: async (params) => {
     const gogAPIUrl = `https://catalog.gog.com/v1/catalog?limit=48&price=between%3A80%2C380&order=desc%3Atrending&productType=in%3Agame%2Cpack&page=1&countryCode=BR&locale=en-US&currencyCode=BRL`;
     const { data: { products } } = await axios.get(gogAPIUrl);
-
-    // console.log(await createManyToManyData(products));
+    // Everything ok... but I need to see if developers and platforms are correct.
+    createGames([products[3]])
   }
 }));
