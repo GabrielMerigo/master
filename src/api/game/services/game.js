@@ -30,7 +30,7 @@ async function getByName(name, entityName){
       }
     });
 
-  return item.results.length ? item.results[0] : null
+  return item.results.length ? item.results[0] : null;
 }
 
 async function create(name, entityName){
@@ -78,6 +78,7 @@ async function createGames(products) {
 
       if (!item) {
         console.info(`Creating: ${product.title}...`);
+        console.log(products)
 
         const game = await strapi.service('api::game.game').create({
           data: {
@@ -91,6 +92,8 @@ async function createGames(products) {
             ),
             developers: await getByName(product.developers[0], "developer"),
             publisher: await getByName(product.publishers[0], "publisher"),
+            cover: product.coverHorizontal,
+            gallery: product.coverVertical,
             ...(await getGameInfo(product.slug))
           }
         });
@@ -105,7 +108,14 @@ module.exports = createCoreService('api::game.game', ({ strapi }) => ({
   populate: async (params) => {
     const gogAPIUrl = `https://catalog.gog.com/v1/catalog?limit=48&price=between%3A80%2C380&order=desc%3Atrending&productType=in%3Agame%2Cpack&page=1&countryCode=BR&locale=en-US&currencyCode=BRL`;
     const { data: { products } } = await axios.get(gogAPIUrl);
+    const item = await strapi
+      .service(`api::game.game`)
+      .find({
+        filters: {
+          name: 'Medieval Dynasty'
+        }
+      });
     // Everything ok... but I need to see if developers and platforms are correct.
-    createGames([products[3]])
+    createGames([products[8]])
   }
 }));
