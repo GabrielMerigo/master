@@ -71,6 +71,33 @@ async function createManyToManyData(products) {
   ]);
 }
 
+async function setImage(imageUrl, game, field) {
+  const { data } = await axios.get(imageUrl, { responseType: "arraybuffer" });
+
+  const buffer = Buffer.from(data, "base64");
+
+  const FormData = require("form-data");
+  const formData = new FormData();
+
+  formData.append("refId", game.id);
+  formData.append("ref", "game");
+  formData.append("field", field);
+  formData.append("files", buffer, { filename: `${game.slug}.jpg` });
+
+  console.info(`Uploading ${field} image: ${game.slug}.jpg`);
+
+  const { data: imageUpdated } = await axios({
+    method: "POST",
+    url: `http://localhost:1337/api/upload`,
+    data: formData,
+    headers: {
+      "Content-Type": `multipart/form-data; boundary=${formData._boundary}`,
+    },
+  })
+
+  return imageUpdated[0].id
+}
+
 async function createGames(products) {
   await Promise.all(
     products.map(async (product) => {
@@ -78,7 +105,9 @@ async function createGames(products) {
 
       if (!item) {
         console.info(`Creating: ${product.title}...`);
-        console.log(products)
+
+        const idImageCover = await setImage(product.coverVertical, product, "cover");
+        const idImageGallery = await setImage(product.coverHorizontal, product, "gallery");
 
         const game = await strapi.service('api::game.game').create({
           data: {
@@ -90,14 +119,15 @@ async function createGames(products) {
             platforms: await Promise.all(
               product.operatingSystems.map((name) => getByName(name, "platform"))
             ),
+            cover: idImageCover,
+            gallery: idImageGallery,
             developers: await getByName(product.developers[0], "developer"),
             publisher: await getByName(product.publishers[0], "publisher"),
-            cover: product.coverHorizontal,
-            gallery: product.coverVertical,
             ...(await getGameInfo(product.slug))
           }
         });
-        console.info(`Created: ${product.title}`);
+
+        console.info(`${product.title} Created`);
         return game;
       }
     })
@@ -108,14 +138,8 @@ module.exports = createCoreService('api::game.game', ({ strapi }) => ({
   populate: async (params) => {
     const gogAPIUrl = `https://catalog.gog.com/v1/catalog?limit=48&price=between%3A80%2C380&order=desc%3Atrending&productType=in%3Agame%2Cpack&page=1&countryCode=BR&locale=en-US&currencyCode=BRL`;
     const { data: { products } } = await axios.get(gogAPIUrl);
-    const item = await strapi
-      .service(`api::game.game`)
-      .find({
-        filters: {
-          name: 'Medieval Dynasty'
-        }
-      });
     // Everything ok... but I need to see if developers and platforms are correct.
-    createGames([products[8]])
+    createManyToManyData(products)
+    createGames([products[19]])
   }
 }));
