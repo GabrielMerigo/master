@@ -4,7 +4,7 @@
   "info": {
     "singularName": "game",
     "pluralName": "games",
-    "displayName": "Game",
+    "displayName": "game",
     "description": ""
   },
   "options": {
@@ -15,7 +15,8 @@
     "name": {
       "type": "string",
       "required": true,
-      "unique": true
+      "unique": true,
+      "pluginOptions": {}
     },
     "slug": {
       "type": "uid",
@@ -24,20 +25,24 @@
     "short_description": {
       "type": "text",
       "required": true,
-      "maxLength": 160
+      "maxLength": 160,
+      "pluginOptions": {}
     },
     "description": {
       "type": "richtext",
-      "required": true
+      "required": true,
+      "pluginOptions": {}
     },
     "price": {
       "type": "decimal",
       "required": true,
-      "default": 0
+      "default": 0,
+      "pluginOptions": {}
     },
     "release_date": {
       "type": "date",
-      "required": false
+      "required": false,
+      "pluginOptions": {}
     },
     "rating": {
       "type": "enumeration",
@@ -49,7 +54,8 @@
         "pegi16",
         "pegi18"
       ],
-      "required": true
+      "required": true,
+      "pluginOptions": {}
     },
     "cover": {
       "type": "media",
@@ -57,7 +63,8 @@
       "required": false,
       "allowedTypes": [
         "images"
-      ]
+      ],
+      "pluginOptions": {}
     },
     "gallery": {
       "type": "media",
@@ -65,7 +72,8 @@
       "required": false,
       "allowedTypes": [
         "images"
-      ]
+      ],
+      "pluginOptions": {}
     },
     "categories": {
       "type": "relation",
